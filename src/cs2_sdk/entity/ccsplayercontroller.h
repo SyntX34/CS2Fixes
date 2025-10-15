@@ -24,10 +24,6 @@
 #include "cbaseplayercontroller.h"
 #include "services.h"
 
-extern CServerSideClient* GetClientBySlot(CPlayerSlot slot);
-
-extern CGameEntitySystem* g_pEntitySystem;
-
 class CCSPlayerController : public CBasePlayerController
 {
 public:
@@ -80,7 +76,7 @@ public:
 
 	bool IsBot()
 	{
-		return m_fFlags() & FL_CONTROLLER_FAKECLIENT;
+		return m_fFlags() & FL_FAKECLIENT;
 	}
 
 	void ChangeTeam(int iTeam)

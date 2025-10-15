@@ -77,7 +77,7 @@ enum EGCItemMsg : int {
   k_EMsgGCDelete = 1004,
   k_EMsgGCVerifyCacheSubscription = 1005,
   k_EMsgGCNameItem = 1006,
-  k_EMsgGCUnlockCrate = 1007,
+  k_EMsgGCUnlockCrate_DEPRECATED = 1007,
   k_EMsgGCUnlockCrateResponse = 1008,
   k_EMsgGCPaintItem = 1009,
   k_EMsgGCPaintItemResponse = 1010,
@@ -124,7 +124,6 @@ enum EGCItemMsg : int {
   k_EMsgGCRemoveUniqueCraftIndexResponse = 1056,
   k_EMsgGCSaxxyBroadcast = 1057,
   k_EMsgGCBackpackSortFinished = 1058,
-  k_EMsgGCAdjustItemEquippedState = 1059,
   k_EMsgGCCollectItem = 1061,
   k_EMsgGCItemAcknowledged__DEPRECATED = 1062,
   k_EMsgGC_ReportAbuse = 1065,
@@ -212,17 +211,16 @@ enum EGCItemMsg : int {
   k_EMsgGCRequestAnnouncementsResponse = 2526,
   k_EMsgGCRequestPassportItemGrant = 2527,
   k_EMsgGCClientVersionUpdated = 2528,
-  k_EMsgGCAdjustItemEquippedStateMulti = 2529,
   k_EMsgGCRecurringSubscriptionStatus = 2530,
   k_EMsgGCAdjustEquipSlotsManual = 2531,
   k_EMsgGCAdjustEquipSlotsShuffle = 2532,
-  k_EMsgGCNameItemAndEquip = 2533,
   k_EMsgGCOpenCrate = 2534,
-  k_EMsgGCAcknowledgeRentalExpiration = 2535
+  k_EMsgGCAcknowledgeRentalExpiration = 2535,
+  k_EMsgGCVolatileItemLoadContents = 2536
 };
 bool EGCItemMsg_IsValid(int value);
 constexpr EGCItemMsg EGCItemMsg_MIN = k_EMsgGCBase;
-constexpr EGCItemMsg EGCItemMsg_MAX = k_EMsgGCAcknowledgeRentalExpiration;
+constexpr EGCItemMsg EGCItemMsg_MAX = k_EMsgGCVolatileItemLoadContents;
 constexpr int EGCItemMsg_ARRAYSIZE = EGCItemMsg_MAX + 1;
 
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* EGCItemMsg_descriptor();

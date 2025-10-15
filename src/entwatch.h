@@ -21,13 +21,17 @@
 
 #include "common.h"
 #include "ctimer.h"
-#include "entity/ccsplayercontroller.h"
-#include "entity/ccsplayerpawn.h"
 #include "eventlistener.h"
 #include "gamesystem.h"
 #include "vendor/nlohmann/json_fwd.hpp"
 
 using ordered_json = nlohmann::ordered_json;
+
+class CCSPlayerController;
+class CCSPlayerPawn;
+
+extern CConVar<bool> g_cvarEnableEntWatch;
+extern CConVar<bool> g_cvarEnableEntwatchHud;
 
 #define EW_PREFIX " \4[EntWatch]\1 "
 
@@ -175,7 +179,7 @@ public:
 		sClantag(""),
 		bHasThisClantag(false),
 		iTeamNum(CS_TEAM_NONE),
-		bShouldGlow(false) {};
+		bShouldGlow(false){};
 	bool RegisterHandler(CBaseEntity* pEnt, int iHandlerTemplateNum);
 	bool RemoveHandler(CBaseEntity* pEnt);
 	int FindHandlerByEntIndex(int indexToFind);
@@ -293,7 +297,7 @@ void EW_DropWeapon(CCSPlayer_WeaponServices* pWeaponServices, CBasePlayerWeapon*
 void EW_PlayerDeath(IGameEvent* pEvent);
 void EW_PlayerDeathPre(CCSPlayerController* pController);
 void EW_PlayerDisconnect(int slot);
-void EW_SendBeginNewMatchEvent();
+void EW_UpdateClientClanTags();
 bool EW_IsFireOutputHooked();
 void EW_FireOutput(const CEntityIOOutput* pThis, CEntityInstance* pActivator, CEntityInstance* pCaller, const CVariant* value, float flDelay);
 int GetTemplateSuffixNumber(const char* szName);

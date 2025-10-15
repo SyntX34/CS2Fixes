@@ -26,25 +26,16 @@
 #include "entity/cgamerules.h"
 #include "entwatch.h"
 #include "eventlistener.h"
+#include "hud_manager.h"
 #include "idlemanager.h"
 #include "leader.h"
 #include "map_votes.h"
-#include "networkstringtabledefs.h"
 #include "panoramavote.h"
 #include "recipientfilters.h"
 #include "votemanager.h"
 #include "zombiereborn.h"
 
 #include "tier0/memdbgon.h"
-
-extern IGameEventManager2* g_gameEventManager;
-extern IServerGameClients* g_pSource2GameClients;
-extern CGameEntitySystem* g_pEntitySystem;
-extern CGlobalVars* GetGlobals();
-extern CCSGameRules* g_pGameRules;
-extern IVEngineServer2* g_pEngineServer2;
-
-extern int g_iRoundNum;
 
 CUtlVector<CGameEventListener*> g_vecEventListeners;
 
@@ -76,32 +67,9 @@ void UnregisterEventListeners()
 	g_vecEventListeners.Purge();
 }
 
-CConVar<bool> g_cvarPurgeEntityNames("cs2f_purge_entity_strings", FCVAR_NONE, "Whether to purge the EntityNames stringtable on new rounds", false);
-
-extern void FullUpdateAllClients();
-
 GAME_EVENT_F(round_prestart)
 {
-	g_iRoundNum++;
-
-	if (g_cvarPurgeEntityNames.Get())
-	{
-		INetworkStringTable* pEntityNames = g_pNetworkStringTableServer->FindTable("EntityNames");
-
-		if (pEntityNames)
-		{
-			int iStringCount = pEntityNames->GetNumStrings();
-			addresses::CNetworkStringTable_DeleteAllStrings(pEntityNames);
-
-			Message("Purged %i strings from EntityNames\n", iStringCount);
-
-			// Vauff: Not fixing cubemap fog in my testing
-			// This also breaks round start particle resets, so disabling for now
-			// pEntityNames->SetTick(-1, nullptr);
-
-			// FullUpdateAllClients();
-		}
-	}
+	RemoveTimers(TIMERFLAG_ROUND);
 
 	EntityHandler_OnRoundRestart();
 
@@ -128,6 +96,7 @@ GAME_EVENT_F(player_team)
 }
 
 CConVar<bool> g_cvarNoblock("cs2f_noblock_enable", FCVAR_NONE, "Whether to use player noblock, which sets debris collision on every player", false);
+CConVar<int> g_cvarFreeArmor("cs2f_free_armor", FCVAR_NONE, "Whether kevlar (1+) and/or helmet (2) are given automatically", 0, true, 0, true, 2);
 
 GAME_EVENT_F(player_spawn)
 {
@@ -151,7 +120,7 @@ GAME_EVENT_F(player_spawn)
 	CHandle<CCSPlayerController> hController = pController->GetHandle();
 
 	// Gotta do this on the next frame...
-	new CTimer(0.0f, false, false, [hController]() {
+	CTimer::Create(0.0f, TIMERFLAG_MAP | TIMERFLAG_ROUND, [hController]() {
 		CCSPlayerController* pController = hController.Get();
 
 		if (!pController)
@@ -174,24 +143,21 @@ GAME_EVENT_F(player_spawn)
 		return -1.0f;
 	});
 
-	// And this needs even more delay..? Don't even know if this is enough, bug can't be reproduced
-	new CTimer(0.1f, false, false, [hController]() {
-		CCSPlayerController* pController = hController.Get();
+	CCSPlayerPawn* pPawn = (CCSPlayerPawn*)pController->GetPawn();
 
-		if (!pController)
-			return -1.0f;
+	if (!pPawn)
+		return;
 
-		CBasePlayerPawn* pPawn = pController->GetPawn();
+	CCSPlayer_ItemServices* pItemServices = pPawn->m_pItemServices();
 
-		if (pPawn)
-		{
-			// Fix new haunted CS2 bug? https://www.reddit.com/r/cs2/comments/1glvg9s/thank_you_for_choosing_anubis_airlines/
-			// We've seen this several times across different maps at this point
-			pPawn->m_vecAbsVelocity = Vector(0, 0, 0);
-		}
+	if (!pItemServices)
+		return;
 
-		return -1.0f;
-	});
+	// Dumb workaround for mp_free_armor breaking kevlar rebuys in buy menu
+	if (g_cvarFreeArmor.GetInt() == 1)
+		pItemServices->GiveNamedItem("item_kevlar");
+	else if (g_cvarFreeArmor.GetInt() == 2)
+		pItemServices->GiveNamedItem("item_assaultsuit");
 }
 
 CConVar<bool> g_cvarEnableTopDefender("cs2f_topdefender_enable", FCVAR_NONE, "Whether to use TopDefender", false);
@@ -259,6 +225,10 @@ GAME_EVENT_F(round_start)
 	if (g_cvarFullAllTalk.Get())
 		g_pEngineServer2->ServerCommand("sv_full_alltalk 1");
 
+	// Ensure there's no warmup, because mp_warmup_online_enabled gets randomly ignored for some reason, this is a problem with cs2f_fix_hud_flashing
+	if (g_cvarFixHudFlashing.Get() && g_pGameRules && g_pGameRules->m_bWarmupPeriod)
+		g_pEngineServer2->ServerCommand("mp_warmup_end");
+
 	if (!g_cvarEnableTopDefender.Get() || !GetGlobals())
 		return;
 
@@ -277,6 +247,9 @@ GAME_EVENT_F(round_start)
 
 GAME_EVENT_F(round_end)
 {
+	if (g_cvarFixHudFlashing.Get() && g_pGameRules)
+		g_pGameRules->m_bGameRestart = false;
+
 	if (!g_cvarEnableTopDefender.Get() || !GetGlobals())
 		return;
 

@@ -17,31 +17,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-#include "cbasemodelentity.h"
-
-class CBaseAnimGraph : public CBaseModelEntity
-{
-public:
-	DECLARE_SCHEMA_CLASS(CBaseAnimGraph)
-};
-
-class CBaseViewModel : public CBaseAnimGraph
-{
-public:
-	DECLARE_SCHEMA_CLASS(CBaseViewModel)
-	SCHEMA_FIELD(uint32_t, m_nViewModelIndex)
-};
-
-class CPredictedViewModel : public CBaseViewModel
-{
-public:
-	DECLARE_SCHEMA_CLASS(CPredictedViewModel)
-};
-
-class CCSGOViewModel : public CPredictedViewModel
-{
-public:
-	DECLARE_SCHEMA_CLASS(CCSGOViewModel)
-	SCHEMA_FIELD(bool, m_bShouldIgnoreOffsetAndAccuracy)
-};
+#define PLUGIN_NAME "cs2fixes"
+#define PLUGIN_ALIAS "cs2fixes"
+#define PLUGIN_DISPLAY_NAME "CS2Fixes"
+#define PLUGIN_DESCRIPTION ""
+#define PLUGIN_AUTHOR ""
+#define PLUGIN_URL ""
+#define PLUGIN_LOGTAG "CS2Fixes"
+#define PLUGIN_LICENSE ""
+#define PLUGIN_FULL_VERSION "DEV-untracked";
